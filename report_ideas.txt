@@ -1,0 +1,386 @@
+# -*- coding: utf-8 -*-
+
+
+
+
+NEW IDEA:
+
+ - make a chord sequenser function 
+ 
+ 1. fill an array (C, F, G) 
+ 2. a knob will select next chord:  C -> F
+ 3. or anothr knob a former chord:  F -> C 
+ 
+
+
+
+
+
+from dataclasses import dataclass
+
+@dataclass
+class Track:
+    title: str
+    artist: str
+    file: str
+
+
+class MusicLibrary:
+    def __init__(self):
+        self.track = None
+
+    def all(self):
+        return self.track
+
+    def add(self, title, artist, file):
+        self.track = Track(title=title, artist=artist, file=file)
+
+
+---------------------
+
+
+class Offer(object):
+    Channel = 'Channel'
+    CC = 'CC'
+    SysEx = 'SysEx'
+    
+    Types = (
+        Channel,
+        CC,
+        SysEx,
+    )
+
+https://stackoverflow.com/questions/4407873/whats-the-difference-between-vs-vs
+
+
+    
+@dataclass
+class Returnvalue:
+    y0: int
+    y1: float
+    y3: int
+
+def total_cost(x):
+    y0 = x + 1
+    y1 = x * 3
+    y2 = y0 ** y3
+    return ReturnValue(y0, y1, y2)
+
+
+
+
+"""
+Created on Fri Jan 20 22:07:53 2023
+
+@author: rolfe
+
+
+    # the alesis controller does will separate between UP/DOWN 
+    # can achieve this by the "val"-parameter at down movement
+    
+    
+    ------------------------------------------------------
+
+
+    # def con(root, key):
+    #     print((root - key + 12) % 12)
+    
+    
+    # for i in range(0,100):
+    #     con(1, i)
+
+
+    #print("Midichannels are from [0-15]")
+
+
+
+"""
+All Sound Off (CC 120)
+
+Mutes all sounding notes that were turned on by received Note On messages, 
+and which haven't yet been turned off by respective Note Off messages. 
+This message is not supposed to mute any notes that the musician is playing on the local keyboard. 
+So, if a device can't distinguish between notes played via its MIDI IN and notes played on the local keyboard, 
+it should not implement All Sound Off.
+
+Note: The difference between this message and All Notes Off is that this message immediately mutes all sound 
+on the device regardless of whether the Hold Pedal is on, and mutes the sound quickly regardless 
+of any lengthy VCA release times. It's often used by sequencers to quickly mute all sound when 
+the musician presses "Stop" in the middle of a song.
+
+All Notes Off (CC 123)
+
+Turns off all notes that were turned on by received Note On messages, 
+and which haven't yet been turned off by respective Note Off messages. 
+This message is not supposed to turn off any notes that the musician is playing on 
+the local keyboard. So, if a device can't distinguish between notes played via its 
+MIDI IN and notes played on the local keyboard, it should not implement 
+All Notes Off. Furthermore, if a device is in Omni On state, it should ignore this message on any channel.
+
+Note: If the device's Hold Pedal controller is on, the notes aren't actually released until the Hold Pedal is turned off. See All Sound Off controller message for turning off the sound of these notes immediately.    
+
+Reset All Controllers (CC 121)
+---
+---
+---
+
+"""    
+
+
+""""
+Undefined MIDI CC List
+In case you just need a MIDI CC List of undefined MIDI CCs to attach an effect/parameter/etc. to a MIDI Controller, here is one with the by default undefined MIDI CCs:
+
+CC 3
+CC 9
+CC 14-15
+CC 20-31
+CC 85-87
+CC 89-90
+CC 102-119
+"""
+
+
+----------------------------------------removed from main ...
+
+    #programnr=midi.sendProgamChange(GmSounds.Vibraphone)
+    #propertylist=GmSounds._class_to_list(GmSounds)
+    #print("GM sound selected for PC: ", propertylist[programnr-1])
+    
+    
+-----------------------------
+Boundary:
+I restrict a port to only accept messages from one midichannel 
+
+This is filtering is done only with ports connected to devices 
+that can produce messages on several functions or instruments  
+ ON THE SAME PORT 
+ Done it on tyros port's bass as it can also send other instruments 
+ on other channels 
+ 
+ 
+ -------------------
+if controllers sharing ports does not use the same CC or Notes 
+there is no need separating on midi-channels
+-----------------------
+
+does midchannel property belong to port or midi object?
+
+----------------------------
+my exit routine does not seems to destroy the 
+big objects , make use of the del command ??? 
+
+------------------------------
+# new strategy!!!!!
+The midi channel filtering should be done 
+when the callback is called (wrong channel, no callback)
+
+now this is solved by filtering inside the callback function itself.
+
+
+-------------------------------------------
+
+for making graphical interface use pygame instead ...
+
+
+
+from ccstore.py ... new way of making keyboard interrupt ?
+..
+...
+def main(args):
+    midiin, _ = open_midiinput(args[0] if args else None)
+
+    # record Modulation, Volume and Expression CC events
+    handler = MidiInHandler(channel=1, controllers=CONTROLLERS)
+    midiin.set_callback(handler)
+
+    try:
+        with midiin:
+            while True:
+                for cc in CONTROLLERS:
+                    print("CC #%i: %s" % (cc, handler.get(cc)))
+
+                print("--- ")
+                time.sleep(1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        del midiin
+
+
+
+"""
+Buy these: 
+* Novation Launchkey 49 MK3
+* Novation FLkey 37 for FL Studio
+
+    #global NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    #NOTES_COUNT = len(NOTES)
+
+
+## IDEAS
+## - make an function for delaying the root-change for the chord - ok
+##    
+## - tempo tap functionality 
+## - make an add 7 function
+## 
+## - make an convert to minor function (always 3ed note in a chord?)
+##
+## - realized that FCB1010 = not polyfonic 
+# strategy1
+### 1. chord knob is pressed    
+### 2. chord is copied to global 
+### 3. bass note is pressed
+### 4. chord in global is played once
+### 5. reset flag so no new chord is trigged
+
+# NB! scb fires CC control:0 ch:0 val:36 accidentaly
+# we therefore avoid control=0
+#sus 2 + 7 = 9 
+#    having an add 7 function can simplify
+
+### NEW CONTROLS
+# convert to minor
+# add7
+# add6 or flat the 7th
+# add 2
+# add 9
+# sharpen 7
+# flat 7    (maj) 
+
+### fcb chords
+#### C_maj,   C_aug,  Cdim,   ,C6,      C9
+#### C_major, C_sus2, C_minor, C7_minor, C7
+
+# I need control that plays fex: dm7 when playing G (slash chord)
+
+
+# the 12 step pedal board has velocity and tilt sensitive and pressure control
+# this can be used to add extra parameters ... like assign a chord root in "silent mode"
+
+# chord sequence mode ... [C,F,G] lpp trough them with a pedal for fast songs ..
+
+
+### NEXT UP: make a panic button and a keyboard interceptor
+### maybe sending panic message by a CC value message
+
+
+
+mido.ports.multi_receive(ports, yield_ports=False, block=True)
+Receive messages from multiple ports.
+
+Generates messages from ever input port. The ports are polled in random order for fairness, 
+and all messages from each port are yielded before moving on to the next port.
+
+If yield_ports=True, (port, message) is yielded instead of just the message.
+
+If block=False only pending messages will be yielded.
+https://mido.readthedocs.io/en/latest/lib.html
+
+
+
+#### IDEA : make a system based on the Stradella system by stacking harmonies 
+# or any other system, the app must detect several knobs at the same time ...
+
+https://accordionchords.com/tutorials/stradella-xtensions-harmonic-technique-for-the-accordion/
+
+tip: Since many jazz chords are actually "stacked" triads, 
+one can often play them using two buttons
+
+What is major 3rd and minor 3rd?
+A minor interval has one less semitone than a major interval. 
+For example: since 
+C to E is a major third (4 half steps), 
+C to Eb is a minor third (3 half steps). 
+
+
+In this case, the ports are device ports, and are connected to some sort of (physical or virtual) MIDI device, but a port can be anything. For example, you can use a MultiPort receive messages from multiple ports as if they were one:
+
+from mido.ports import MultiPort
+
+...
+multi = MultiPort([inport1, inport2, inport3])
+for msg in multi:
+    print(msg)
+
+
+#### make arpegiator ...
+
+### some MIDO Constructors 
+##
+#        #if .... the rest of all Midi message constructors ....
+#        #    mido.new('polytouch', channel=0, note=0, value=0, time=0)
+#        #    mido.new('program_change', channel=0, program=0, time=0)
+#        #    mido.new('aftertouch', channel=0, value=0, time=0)
+#        #    mido.new('pitchwheel', channel=0, value=0, time=0)
+##no channel info .......        
+#        #    mido.new('sysex', data=(), time=0)
+#        #    mido.new('undefined_f1', time=0)
+#        #    mido.new('songpos', pos=0, time=0)
+#        #    mido.new('song', song=0, time=0)
+#        #    mido.new('undefined_f4', time=0)
+#        #    mido.new('undefined_f5', time=0)
+#        #    mido.new('tune_request', time=0)
+#        #    mido.new('sysex_end', time=0)
+#        #    mido.new('clock', time=0)
+#        #    mido.new('undefined_f9', time=0)
+#        #    mido.new('start', time=0)
+#        #    mido.new('continue', time=0)
+#        #    mido.new('stop', time=0)
+#        #    mido.new('undefined_fd', time=0)
+#        #    mido.new('active_sensing', time=0)
+#        #    mido.new('reset', time=0)
+
+
+
+
+1 - Using MIDI controller 123
+If you send a MIDI controller 123 on one MIDI channel, 
+the synthesizer will stop all notes playing on that channel. 
+To reset all MIDI channels, send that message for each channel. 
+Please note that some synthesizer do not respond to this message.
+
+2 -MIDI Reset message
+This is a one status byte message 0xFF, without data bytes. 
+It should reset the synthesizer to its power-on default, so it also stops all notes playing.
+ Use this message sparingly, as it reset the full synthesizer, not only the notes playing.
+
+3 - MIDI NOTE OFF
+You can also send, for each channel (0 to 15) and each note pitch (0 to 127) 
+one MIDI NOTE OFF message. This is the total solution, but requires a lot of
+ MIDI messages to be sent, which may have some reaction time according to the 
+ MIDI hardware system you use.
+
+4 - MIDI NOTE OFF - Optimized
+In this case, use a table to keep track of the NOTE ON and OFF messages 
+you send for each channel. A buffer of 128 bytes for each channel, 
+representing the number of NOTE ON messages sent to that note, 
+should be incremented by a NOTE ON and decremented by a NOTE OFF.
+ Then, when you want to reset every note, simply go through that table and send a NOTE OFF to each note that is still playing.
+
+
+
+
+
+
+https://natespilman.com/blog/playing-chords-with-mido-and-python/
+
+https://pypi.org/project/pychord/
+
+
+https://github.com/yuma-m/pychord
+
+https://github.com/fanzhangg/chord-master
+
+https://github.com/yychen/livespring
+https://github.com/joshuachang2311/chorder
+
+IDEA: load in the chords used for that particular song to ease chord detection 
+
+            new_root = (self.root_pc - key + 12) % 12
+            new_bass = (self.bass_pc - key + 12) % 12
+            
+            
+            
+            
+    
